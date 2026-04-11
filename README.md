@@ -1,8 +1,8 @@
-![C++](https://img.shields.io/badge/C%2B%2B-20-blue?logo=cplusplus)
+![C++](https://img.shields.io/badge/C%2B%2B-20%2F23-blue?logo=cplusplus)
 
 # cpp-topics
 
-C++ 概念库。记录写法、Type wrapper、算法演示等可回头参考的内容。每个文件自包含，附带可执行的演示。
+个人的现代 C++ (C++20/23) 学习仓库。当前聚焦在 wrapper 类型设计与独立主题演示，每个单元自包含，附带可运行示例。
 
 ## 结构
 
