@@ -3,6 +3,7 @@
 #include <queue>
 #include <unordered_set>
 #include <optional>
+#include <string>
 #include <cassert>
 
 using namespace ListNodeUtil;
