@@ -60,6 +60,8 @@
 
 ### 已完成
 
+**演示样本**(我写的,你跑过):
+
 | 路径 | 主题 | 关键点 |
 |------|------|--------|
 | `Consumption/Race.cpp` | race / lost update | 裸 `int` 扣血,总伤害 < 攻击次数 |
@@ -67,11 +69,29 @@
 | `Consumption/LastHit.cpp` | CAS 抢击杀者 | `compare_exchange_weak` 多攻击者抢归属 |
 | `Consumption/OverKill.cpp` | mutex 不变式 | `bAlive == (HP > 0)`,`OnDeath` 仅一次 |
 | `Waiting/Order.cpp` | CV 最小骨架 | `wait(Lock, Pred)` + `notify_one` 顾客等厨师 |
+| `Exercise/AtomicOps.cpp` | atomic 家族速查 | 6 个 demo 涵盖 load/store/exchange/fetch_X/CAS/release-acquire |
 
-附加实测(没落成 .cpp,但跑过):
+**练习题**(你自己写的实现):
+
+| 路径 | 状态 | 主题 |
+|------|------|------|
+| `Exercise/Test_01_Counter.cpp` | ✅ | 基础 fetch_X 计数器 |
+| `Exercise/Test_02_AtomicMax.cpp` | ✅ | CAS 循环,原子 max |
+| `Exercise/Test_03_PublishSubscribe.cpp` | ✅ | memory_order release/acquire 配对 |
+| `Exercise/Test_04_SpinLock.cpp` | ✅ | 从 0 实现完整 spinlock(踩过 bug 后修对) |
+| `Exercise/Test_05_AtomicMin.cpp` | ✅ | Test_02 镜像,改对后形式美观 |
+| `Exercise/Test_06_BoundedCounter.cpp` | ✅ | 条件 CAS(满了不写),识别出与 05 同模板 |
+| `Exercise/Test_07_SlotClaimer.cpp` | ⏳ | CAS 占槽 + 普通写,组合形态 |
+| `Exercise/Test_08_PermitPool.cpp` | ⏳ | TryDo/Do + main() 也部分置空 |
+
+**附加实测**(没落 .cpp,但跑过):
 
 - 单核 vs 多核 affinity 对照,锁定 CPU0 跑 `Race.exe` 看 race 表现差异
 - `volatile` 强制 3 指令 RMW,让单核也能露出 race
+
+### 重点提醒:还没看的现成样本
+
+- **`Consumption/LastHit.cpp` 还没看过**。这是 CAS 在游戏场景里的真实落地(多 attacker 抢"击杀者"归属)。看这一份能帮你把"CAS 循环"在游戏栈语境里再加深一层。可以放在 Test_07 之后再看,作为"看别人怎么写"的对照。
 
 ### 待写
 
@@ -104,9 +124,13 @@
 
 ## 下一步建议
 
-1. **补完 Waiting/ 剩余三个样本**:`BossDeath.cpp`(notify_all)、`LostWakeup.cpp`(predicate 必要性)、`Timeout.cpp`(限时等待)。把 CV 这一块从 🟡 推到 ✅
-2. **memory_order 落地样本**:release/acquire 的 publish-subscribe pattern,一个写者发布数据指针、读者按 acquire 读到完整对象,把 🟡 推到 ✅
-3. **挑一个高阶模式起子主题**:Pipeline 或 WorkerPool 二选一展开,Pipeline 适合做帧管线场景,WorkerPool 更通用
+按推荐顺序:
+
+1. **跑通 Test_07 + Test_08**(明天/状态好时)。Test_07 是 Test_06 的"占槽 + 普通写"组合,Test_08 是 TryDo/Do + 使用方代码。这两道做完,Exercise 系列的 CAS 模板部分**完整闭环**
+2. **回头看 `Consumption/LastHit.cpp`**——同一个 CAS 模板在游戏场景里的样子。看完会对"CAS 模板的通用性"有更深的内化
+3. **补完 Waiting/ 剩余三个样本**:`BossDeath.cpp` / `LostWakeup.cpp` / `Timeout.cpp`,把 CV 这一块从 🟡 推到 ✅
+4. **memory_order acq_rel 实战**:写一个 mini ref count(类似 shared_ptr 内部的 ControlBlock),把 acq_rel 从 50% 推到 70%
+5. **挑一个高阶模式起子主题**:Pipeline 或 WorkerPool 二选一
 
 ## 基础设施摘要
 
