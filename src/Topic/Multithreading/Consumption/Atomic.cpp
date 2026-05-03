@@ -22,7 +22,7 @@ int main()
     {
         for (int i = 0; i < HitsPerAttacker; ++i)
         {
-            BossHP.fetch_sub(1, std::memory_order_relaxed);
+            BossHP.fetch_sub(1, std::memory_order_consume);
         }
     };
 

@@ -16,7 +16,8 @@ src/
     ├── Concurrency/            # 并发原语:mutex, condition_variable, atomic
     ├── LinkedList/             # 链表算法合集
     └── Multithreading/         # 多线程话题学习,按场景 sampling
-        └── Consumption/        # 消耗:HP 扣减、击杀归属、不变式保护
+        ├── Consumption/        # 消耗:HP 扣减、击杀归属、不变式保护
+        └── Waiting/            # 等待:condition_variable,线程间协作通知
 ```
 
 ## Type
