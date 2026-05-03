@@ -8,9 +8,9 @@
 
 | 维度 | 估算 | 一句话定性 |
 |------|------|-----------|
-| 概念覆盖 | ~50% | 单变量同步 + CV 入门已通,异步契约层与高阶模式未碰 |
-| 代码样本 | ~25% | Consumption 主线齐了,Waiting 只起了个头,其它子主题全空 |
-| 综合 | ~35% | 概念跑在样本前面,需要把样本补上来 |
+| 概念覆盖 | ~58% | 单变量同步 + CV + memory_order 配对 + CAS 几种变种已通,异步契约层与高阶模式未碰 |
+| 代码样本 | ~35% | Consumption / Waiting 入门齐,Exercise 系列推进中(Test 01-08 出齐 6 题已完成) |
+| 综合 | ~45% | CAS 模板从 60% 推到 80%,acquire/release 从 40% 推到 65% |
 
 ## 概念覆盖
 
@@ -21,12 +21,16 @@
 | thread 基础 | `emplace_back`、`join`、`detach`、lambda 按引用捕获、`vector<thread>` 批量起 | ✅ | 85% |
 | race condition / lost update | 现象 + 机制,跨核 cache coherence vs 单核中断的对照 | ✅ | 85% |
 | 单核 / 多核 + 编译器优化对原子性的影响 | volatile 强制拆 RMW、affinity 实测、`lock` 前缀作用 | ✅ | 70% |
-| atomic 家族 | `load`/`store`/`exchange`/`fetch_add`/`fetch_sub` 返回旧值的语义 | ✅ | 75% |
-| CAS / `compare_exchange` | 取-算-CAS-重试套路,weak vs strong | 🟡 | 60% |
+| atomic 家族 | `load`/`store`/`exchange`/`fetch_add`/`fetch_sub` 返回旧值的语义 | ✅ | 80% |
+| CAS / `compare_exchange` | 通用模板(while + 条件 + CAS + 自动重判),Test_05/06/07/08 反复练 | ✅ | 80% |
+| **CAS 通用模板识别**(while + cond + CAS + 重判) | 自己识别出"max/min/bounded/permit pool 是同一个模板"的能力 | ✅ | 75% |
+| weak vs strong | 概念清楚,标准用法(loop 用 weak,单次用 strong) | ✅ | 70% |
 | ABA 问题 | 提了一次,未演练 | ⏳ | 25% |
-| memory_order(relaxed / seq_cst) | 两端语义,与分布式一致性等级的对应 | ✅ | 70% |
-| **memory_order(acquire / release)** | **概念读到了,未在 snippet 里反复识别过** | **🟡** | **40%** |
+| memory_order(relaxed / seq_cst) | 两端语义,与分布式一致性等级的对应 | ✅ | 75% |
+| memory_order(acquire / release) | Test_03/04/08 反复见配对 pattern,publish-subscribe 已通 | 🟡 | 65% |
+| memory_order(acq_rel) | 概念清楚(ref count、CAS 在生产-消费链路里),未亲手写过 | 🟡 | 50% |
 | mutex / lock_guard / unique_lock | 在 OverKill.cpp 见过,`lock_guard` vs `unique_lock` 区别未深入 | 🟡 | 60% |
+| **spinlock 设计与陷阱**(自己实现过) | Test_04 从 0 写过,踩过 5+ 个 bug,知道哪些场景不适合 | ✅ | 75% |
 | condition_variable | `wait(Lock, Pred)` + `notify_one`,Order.cpp 跑过一次 | 🟡 | 50% |
 | spurious wakeup / lost wakeup | 概念清楚,未亲手撞过 | 🟡 | 45% |
 | 关键字辨析:volatile | 四个合法用途 + 不是同步原语 | ✅ | 85% |
@@ -46,11 +50,11 @@
 
 | 领域 | 现值 | 需要做 |
 |------|------|--------|
-| memory_order acquire/release | 40% | 写 publish-subscribe 的实战 snippet,亲手识别 release/acquire pair |
 | condition_variable + spurious/lost wakeup | 45-50% | 补 Waiting/ 剩余三个样本(BossDeath / LostWakeup / Timeout) |
 | async / future / promise | 55% | 写一个最小 promise+future 的 snippet,亲手摸一次 |
-| CAS pattern | 60% | 写 SPSC 队列骨架,反复见 CAS 在不同形态里 |
+| memory_order acq_rel | 50% | 写一个 ref count 的小样本,亲手用 acq_rel |
 | coroutine | 35% | 写一个 `co_await` 的最小 awaitable,理解暂停/恢复机制 |
+| ABA 问题 | 25% | 看一个反例 snippet 后,知道何时该警惕 |
 
 ## 代码样本清单
 

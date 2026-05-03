@@ -34,13 +34,22 @@ class TLowestScoreBoard
 public:
     void ReportScore(int Score)
     {
+
         // TODO:CAS 循环更新 LowestScore 为 min(当前, Score)
+        int Old = GetLowestScore();
+
+        while (Score < Old)
+        {
+            if (LowestScore.compare_exchange_weak(Old, Score, std::memory_order_relaxed, std::memory_order_relaxed))
+            {
+                return;
+            }
+        }
     }
 
     int GetLowestScore() const
     {
-        // TODO
-        return 0;
+        return LowestScore.load(std::memory_order_relaxed);
     }
 
 private:

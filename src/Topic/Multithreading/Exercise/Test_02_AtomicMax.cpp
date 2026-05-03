@@ -42,20 +42,13 @@ public:
         // TODO:写 CAS 循环更新 HighScore 为 max(当前, Score)
         int Old = GetHighScore();
 
-        if (Old >= Score)
+        while (Score > Old)
         {
-            return;
+            if(HighScore.compare_exchange_weak(Old, Score, std::memory_order_relaxed, std::memory_order_relaxed))
+            {
+                return;
+            }
         }
-
-        int New;
-        do
-        {
-            New = Score;
-        }
-        while(!HighScore.compare_exchange_weak(
-            Old, New, 
-            std::memory_order_relaxed, 
-            std::memory_order_relaxed));
     }
 
     int GetHighScore() const

@@ -45,13 +45,23 @@ public:
     bool TryIncrement()
     {
         // TODO:CAS 循环 + 条件退出
-        return false;   // 占位:替换掉
+        int Old = Get();
+
+        while (Old < MaxValue)
+        {
+            if (Value.compare_exchange_weak(Old, Old + 1, std::memory_order_relaxed, std::memory_order_relaxed))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     int Get() const
     {
         // TODO
-        return 0;
+        return Value.load(std::memory_order_relaxed);
     }
 
 private:
