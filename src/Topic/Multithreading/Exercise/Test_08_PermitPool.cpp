@@ -46,18 +46,30 @@ public:
 
     bool TryAcquire()
     {
+        int OldCapacity = Available.load(std::memory_order_relaxed);
+
         // TODO:CAS 条件递减(Old > 0 才能 -1)
+        while(OldCapacity > 0)
+        {
+            if (Available.compare_exchange_weak(OldCapacity, OldCapacity - 1, std::memory_order_acquire, std::memory_order_relaxed))
+            {
+                return true;
+            }
+        }
         return false;
     }
 
     void Acquire()
     {
-        // TODO:spin 等,失败 yield
+        while(!TryAcquire())
+        {
+            std::this_thread::yield();
+        }
     }
 
     void Release()
     {
-        // TODO:fetch_add(1, release)
+        Available.fetch_add(1, std::memory_order_release);
     }
 
 private:
@@ -100,6 +112,24 @@ int main()
         {
             for (int j = 0; j < IterPerWorker; ++j)
             {
+                Pool.Acquire();
+                int Now = Inside.fetch_add(1, std::memory_order_relaxed) + 1;
+                
+                int OldMax = MaxInside.load(std::memory_order_relaxed);
+
+                while(Now > OldMax)
+                {
+                    if (MaxInside.compare_exchange_weak(OldMax, Now, std::memory_order_relaxed, std::memory_order_relaxed))
+                    {
+                        break;
+                    }
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(200)); //强制逗留
+
+                Inside.fetch_sub(1, std::memory_order_relaxed);
+                Pool.Release();
+                Completed.fetch_add(1, std::memory_order_relaxed);
                 // TODO:写一个完整的 work cycle:Acquire → 进临界 → 工作 → 出临界 → Release
                 //
                 // 提醒:

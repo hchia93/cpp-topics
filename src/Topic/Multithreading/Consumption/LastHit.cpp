@@ -6,9 +6,13 @@
 // 用 CAS 抢"击杀者"归属。多个 attacker 争最后一击,
 // 只有把 HP 从 1 扣到 0 的那一次才记为击杀。
 //
-// 套路:读当前 HP → 算出新 HP → 仅当 HP 没被别人改过时才提交。
-// compare_exchange_weak 在竞争失败时会顺便把 Current 重新加载
-// 为最新值,所以失败分支什么都不写,loop 自然重试。
+// 套路(和 Test_05 / 06 同模板):
+//   1. load 一次 Current(放在 loop 外)
+//   2. while (Current > 0):算 Next → CAS → 成功就处理,失败 CAS 已自动刷新 Current
+//   3. CAS 成功且击杀(Next == 0)→ publish Killer 后返回
+//
+// 关键:初始 load 放 loop 外。失败时 CAS 的 failure-acquire 已经把 Current
+//      刷成最新值,loop 顶部不需要再 load 一次。
 
 int main()
 {
@@ -21,14 +25,10 @@ int main()
 
     auto AttackerFn = [&](int Id)
     {
-        while (true)
-        {
-            int Current = BossHP.load(std::memory_order_acquire);
-            if (Current <= 0)
-            {
-                return;
-            }
+        int Current = BossHP.load(std::memory_order_acquire);
 
+        while (Current > 0)
+        {
             const int Next = Current - 1;
             if (BossHP.compare_exchange_weak(
                     Current, Next,
@@ -42,7 +42,7 @@ int main()
                     return;
                 }
             }
-            // 失败:CAS 已经把 Current 更新为最新值,直接重试
+            // CAS 失败:Current 已被刷成最新值,while 自己重判 Current > 0
         }
     };
 

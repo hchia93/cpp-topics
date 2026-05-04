@@ -8,9 +8,9 @@
 
 | 维度 | 估算 | 一句话定性 |
 |------|------|-----------|
-| 概念覆盖 | ~58% | 单变量同步 + CV + memory_order 配对 + CAS 几种变种已通,异步契约层与高阶模式未碰 |
-| 代码样本 | ~35% | Consumption / Waiting 入门齐,Exercise 系列推进中(Test 01-08 出齐 6 题已完成) |
-| 综合 | ~45% | CAS 模板从 60% 推到 80%,acquire/release 从 40% 推到 65% |
+| 概念覆盖 | ~63% | 单变量同步 + CV + memory_order 配对(含 acq_rel R/M/W 拆解) + CAS 几种变种已通,异步契约层与高阶模式未碰 |
+| 代码样本 | ~42% | Consumption / Waiting 入门齐,LastHit.cpp 已读 + 重构,Exercise 进到 08 ✅,09/10 待做 |
+| 综合 | ~52% | acquire/release 推到 75%,acq_rel 推到 60%,CAS 失败侧 acquire 语义内化 |
 
 ## 概念覆盖
 
@@ -27,8 +27,8 @@
 | weak vs strong | 概念清楚,标准用法(loop 用 weak,单次用 strong) | ✅ | 70% |
 | ABA 问题 | 提了一次,未演练 | ⏳ | 25% |
 | memory_order(relaxed / seq_cst) | 两端语义,与分布式一致性等级的对应 | ✅ | 75% |
-| memory_order(acquire / release) | Test_03/04/08 反复见配对 pattern,publish-subscribe 已通 | 🟡 | 65% |
-| memory_order(acq_rel) | 概念清楚(ref count、CAS 在生产-消费链路里),未亲手写过 | 🟡 | 50% |
+| memory_order(acquire / release) | Test_03/04/08 反复见配对 pattern。LastHit.cpp 全员 order 解码,识别 release 冗余 vs 必须、failure 一定 ≤ acquire | ✅ | 75% |
+| memory_order(acq_rel) | LastHit CAS 的 acq_rel 拆成 R/M/W 模型,理解 R+W 同时承担两份职责。还没自己写过完整 ref count | 🟡 | 60% |
 | mutex / lock_guard / unique_lock | 在 OverKill.cpp 见过,`lock_guard` vs `unique_lock` 区别未深入 | 🟡 | 60% |
 | **spinlock 设计与陷阱**(自己实现过) | Test_04 从 0 写过,踩过 5+ 个 bug,知道哪些场景不适合 | ✅ | 75% |
 | condition_variable | `wait(Lock, Pred)` + `notify_one`,Order.cpp 跑过一次 | 🟡 | 50% |
@@ -68,6 +68,7 @@
 | `Consumption/Atomic.cpp` | `fetch_sub` 修复 | 单变量计数,伤害守恒 |
 | `Consumption/LastHit.cpp` | CAS 抢击杀者 | `compare_exchange_weak` 多攻击者抢归属 |
 | `Consumption/OverKill.cpp` | mutex 不变式 | `bAlive == (HP > 0)`,`OnDeath` 仅一次 |
+| `Consumption/LastHit.cpp` | CAS 抢击杀 + acq_rel 实战 | 已读 + 重构 load 外置。每个 order 都能解释为什么这么选 |
 | `Waiting/Order.cpp` | CV 最小骨架 | `wait(Lock, Pred)` + `notify_one` 顾客等厨师 |
 | `Exercise/AtomicOps.cpp` | atomic 家族速查 | 6 个 demo 涵盖 load/store/exchange/fetch_X/CAS/release-acquire |
 
@@ -81,8 +82,10 @@
 | `Exercise/Test_04_SpinLock.cpp` | ✅ | 从 0 实现完整 spinlock(踩过 bug 后修对) |
 | `Exercise/Test_05_AtomicMin.cpp` | ✅ | Test_02 镜像,改对后形式美观 |
 | `Exercise/Test_06_BoundedCounter.cpp` | ✅ | 条件 CAS(满了不写),识别出与 05 同模板 |
-| `Exercise/Test_07_SlotClaimer.cpp` | ⏳ | CAS 占槽 + 普通写,组合形态 |
-| `Exercise/Test_08_PermitPool.cpp` | ⏳ | TryDo/Do + main() 也部分置空 |
+| `Exercise/Test_07_SlotClaimer.cpp` | ✅ | CAS 占槽 + 普通写,实现正确 |
+| `Exercise/Test_08_PermitPool.cpp` | ✅ | TryDo/Do + 使用方完整。修过 Capacity vs OldCapacity 笔误。sleep 保留 200ms 当压力测试 |
+| `Exercise/Test_09_CountdownLatch.cpp` | ⏳ | spin-Wait + acq/rel 配对,N release ↔ 1 acquire |
+| `Exercise/Test_10_OneShotFlag.cpp` | ⏳ | publish-subscribe 广播版,1 release ↔ N acquire |
 
 **附加实测**(没落 .cpp,但跑过):
 
@@ -91,7 +94,7 @@
 
 ### 重点提醒:还没看的现成样本
 
-- **`Consumption/LastHit.cpp` 还没看过**。这是 CAS 在游戏场景里的真实落地(多 attacker 抢"击杀者"归属)。看这一份能帮你把"CAS 循环"在游戏栈语境里再加深一层。可以放在 Test_07 之后再看,作为"看别人怎么写"的对照。
+- (LastHit 已通,这条本来在这里,已挪到上面表格)
 
 ### 待写
 
@@ -126,11 +129,10 @@
 
 按推荐顺序:
 
-1. **跑通 Test_07 + Test_08**(明天/状态好时)。Test_07 是 Test_06 的"占槽 + 普通写"组合,Test_08 是 TryDo/Do + 使用方代码。这两道做完,Exercise 系列的 CAS 模板部分**完整闭环**
-2. **回头看 `Consumption/LastHit.cpp`**——同一个 CAS 模板在游戏场景里的样子。看完会对"CAS 模板的通用性"有更深的内化
-3. **补完 Waiting/ 剩余三个样本**:`BossDeath.cpp` / `LostWakeup.cpp` / `Timeout.cpp`,把 CV 这一块从 🟡 推到 ✅
-4. **memory_order acq_rel 实战**:写一个 mini ref count(类似 shared_ptr 内部的 ControlBlock),把 acq_rel 从 50% 推到 70%
-5. **挑一个高阶模式起子主题**:Pipeline 或 WorkerPool 二选一
+1. **做 Test_09 + Test_10**(复习 spin-Wait + release/acquire 配对,无 CAS 干扰)
+2. **补完 Waiting/ 剩余三个样本**:`BossDeath.cpp` / `LostWakeup.cpp` / `Timeout.cpp`,把 CV 这一块从 🟡 推到 ✅
+3. **memory_order acq_rel 实战**:写一个 mini ref count(类似 shared_ptr 内部的 ControlBlock),把 acq_rel 从 60% 推到 80%
+4. **挑一个高阶模式起子主题**:Pipeline 或 WorkerPool 二选一
 
 ## 基础设施摘要
 

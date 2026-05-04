@@ -49,20 +49,27 @@ public:
 
     bool TryAppend(int Value)
     {
-        // TODO:占槽 + 写入
+        int Old = GetSize();
+        while (Old < Capacity)
+        {
+            if (Size.compare_exchange_weak(Old, Old+1, std::memory_order_relaxed, std::memory_order_relaxed))
+            {
+                Buffer[Old] = Value;
+                return true;
+            }
+        }
+
         return false;
     }
 
     int GetSize() const
     {
-        // TODO
-        return 0;
+        return Size.load(std::memory_order_relaxed);
     }
 
     int GetAt(int Idx) const
     {
-        // TODO
-        return 0;
+        return Buffer[Idx];
     }
 
 private:
