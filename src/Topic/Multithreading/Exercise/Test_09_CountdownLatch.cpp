@@ -51,18 +51,20 @@ public:
 
     void CountDown()
     {
-        // TODO:fetch_sub(1, release)
+        Counter.fetch_sub(1, std::memory_order_release);
     }
 
     bool TryWait() const
-    {
-        // TODO:load(acquire) <= 0
-        return false;
+    {   
+        return Counter.load(std::memory_order_acquire) <= 0;
     }
 
     void Wait() const
     {
-        // TODO:while (!TryWait()) yield()
+        while(!TryWait())
+        {
+            std::this_thread::yield();
+        }
     }
 
 private:
@@ -101,9 +103,8 @@ int main()
     {
         Threads.emplace_back([&, i]
         {
-            // TODO:写一个 worker:
-            //   1. Results[i] = i * i
-            //   2. Latch.CountDown()
+            Results[i] = i*i;
+            Latch.CountDown();
         });
     }
 
