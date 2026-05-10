@@ -51,15 +51,21 @@
 | `future` / `promise` | 拿一次性结果 | Fan-Out / Fan-In |
 | `coroutine` | 把异步链写成线性 | Reactor、IO 重的任何场景 |
 
+## 同步样式选择
+
+[样式表.md](样式表.md):按形状(1→1 / 1→N / N→1 / N↔N peer / M↔N)、角色、寿命三轴归类同步样式,关联到具体练习题。下手写并发结构前先看这张表。
+
 ## 在本仓库的子主题地图
 
 按 sampling 风格,每个模式占一个子目录,目录内同名 `.md` 索引样本:
 
 ```
 Topic/Multithreading/
-├── Multithreading.md       # 本文件
+├── Multithreading.md       # 本文件:模式速查 + 选型
+├── 样式表.md               # 跨子主题的同步样式选择(形状 / 角色 / 寿命)
 ├── Consumption/            # ✅ 抢资源:atomic、CAS、mutex
-├── Waiting/                # condition_variable 主场:等通知、广播
+│   └── Exercise/           # ✅ atomic / CAS / spin 练习 + 参考样本
+├── Waiting/                # 🟡 condition_variable:等通知、广播、bounded queue
 ├── Pipeline/               # 帧管线:多段队列串接
 ├── WorkerPool/             # 线程池:任务派发、生命周期
 ├── JobSystem/              # 依赖图 + work-stealing

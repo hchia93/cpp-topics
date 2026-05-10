@@ -9,8 +9,18 @@
 | 维度 | 估算 | 一句话定性 |
 |------|------|-----------|
 | 概念覆盖 | ~63% | 单变量同步 + CV + memory_order 配对(含 acq_rel R/M/W 拆解) + CAS 几种变种已通,异步契约层与高阶模式未碰 |
-| 代码样本 | ~42% | Consumption / Waiting 入门齐,LastHit.cpp 已读 + 重构,Exercise 进到 08 ✅,09/10 待做 |
+| 代码样本 | ~50% | Consumption 完整,Waiting 五件齐,LastHit.cpp 已读 + 重构,Exercise 进到 09 ✅,10 待做 |
 | 综合 | ~52% | acquire/release 推到 75%,acq_rel 推到 60%,CAS 失败侧 acquire 语义内化 |
+
+## 仓库重整(2026-05-11)
+
+| 旧路径 | 新路径 |
+|--------|--------|
+| `Topic/Concurrency/Concurrency.cpp` | `Topic/Multithreading/Waiting/BoundedQueue.cpp` |
+| `Topic/Multithreading/Exercise/` | `Topic/Multithreading/Consumption/Exercise/` |
+| `Exercise/AtomicOps.cpp` | `Consumption/Exercise/Example_AtomicOps.cpp`(改名) |
+
+Concurrency 子目录是 Multithreading 的一部分,已合并。Exercise 归属到 Consumption(全是 atomic/CAS/spin 题)。`AtomicOps.cpp` 是练习参考样本,改前缀 `Example_` 与 `Test_` 区分。
 
 ## 概念覆盖
 
@@ -31,8 +41,8 @@
 | memory_order(acq_rel) | LastHit CAS 的 acq_rel 拆成 R/M/W 模型,理解 R+W 同时承担两份职责。还没自己写过完整 ref count | 🟡 | 60% |
 | mutex / lock_guard / unique_lock | 在 OverKill.cpp 见过,`lock_guard` vs `unique_lock` 区别未深入 | 🟡 | 60% |
 | **spinlock 设计与陷阱**(自己实现过) | Test_04 从 0 写过,踩过 5+ 个 bug,知道哪些场景不适合 | ✅ | 75% |
-| condition_variable | `wait(Lock, Pred)` + `notify_one`,Order.cpp 跑过一次 | 🟡 | 50% |
-| spurious wakeup / lost wakeup | 概念清楚,未亲手撞过 | 🟡 | 45% |
+| condition_variable | `wait(Lock, Pred)` + `notify_one`/`notify_all`/`wait_for` 全见过,5 个 Waiting/ demo 齐 | ✅ | 75% |
+| spurious wakeup / lost wakeup | LostWakeup.cpp 强制重现 lost wakeup,无 Pred 裸 wait 死等 | ✅ | 70% |
 | 关键字辨析:volatile | 四个合法用途 + 不是同步原语 | ✅ | 85% |
 | 关键字辨析:mutable | 外部 const 内部可改,lambda mutable | ✅ | 85% |
 | 关键字辨析:const_cast | 通常是签名设计错,Scott Meyers pattern 是正当用法 | ✅ | 75% |
@@ -50,7 +60,6 @@
 
 | 领域 | 现值 | 需要做 |
 |------|------|--------|
-| condition_variable + spurious/lost wakeup | 45-50% | 补 Waiting/ 剩余三个样本(BossDeath / LostWakeup / Timeout) |
 | async / future / promise | 55% | 写一个最小 promise+future 的 snippet,亲手摸一次 |
 | memory_order acq_rel | 50% | 写一个 ref count 的小样本,亲手用 acq_rel |
 | coroutine | 35% | 写一个 `co_await` 的最小 awaitable,理解暂停/恢复机制 |
@@ -70,22 +79,26 @@
 | `Consumption/OverKill.cpp` | mutex 不变式 | `bAlive == (HP > 0)`,`OnDeath` 仅一次 |
 | `Consumption/LastHit.cpp` | CAS 抢击杀 + acq_rel 实战 | 已读 + 重构 load 外置。每个 order 都能解释为什么这么选 |
 | `Waiting/Order.cpp` | CV 最小骨架 | `wait(Lock, Pred)` + `notify_one` 顾客等厨师 |
-| `Exercise/AtomicOps.cpp` | atomic 家族速查 | 6 个 demo 涵盖 load/store/exchange/fetch_X/CAS/release-acquire |
+| `Waiting/BossDeath.cpp` | `notify_all` 广播 | N looter 等 boss 死,只 notify_one 会死锁 |
+| `Waiting/LostWakeup.cpp` | wait 必须带 predicate | notifier 抢跑实演 lost wakeup,Pred 版自救 |
+| `Waiting/Timeout.cpp` | `wait_for` 限时等 | 500ms 上限,超时放弃,网络请求标配 |
+| `Waiting/BoundedQueue.cpp` | producer-consumer 综合 | 双 CV(NotEmpty/NotFull)+ 优雅 stop |
+| `Consumption/Exercise/Example_AtomicOps.cpp` | atomic 家族速查 | 6 个 demo 涵盖 load/store/exchange/fetch_X/CAS/release-acquire |
 
 **练习题**(你自己写的实现):
 
 | 路径 | 状态 | 主题 |
 |------|------|------|
-| `Exercise/Test_01_Counter.cpp` | ✅ | 基础 fetch_X 计数器 |
-| `Exercise/Test_02_AtomicMax.cpp` | ✅ | CAS 循环,原子 max |
-| `Exercise/Test_03_PublishSubscribe.cpp` | ✅ | memory_order release/acquire 配对 |
-| `Exercise/Test_04_SpinLock.cpp` | ✅ | 从 0 实现完整 spinlock(踩过 bug 后修对) |
-| `Exercise/Test_05_AtomicMin.cpp` | ✅ | Test_02 镜像,改对后形式美观 |
-| `Exercise/Test_06_BoundedCounter.cpp` | ✅ | 条件 CAS(满了不写),识别出与 05 同模板 |
-| `Exercise/Test_07_SlotClaimer.cpp` | ✅ | CAS 占槽 + 普通写,实现正确 |
-| `Exercise/Test_08_PermitPool.cpp` | ✅ | TryDo/Do + 使用方完整。修过 Capacity vs OldCapacity 笔误。sleep 保留 200ms 当压力测试 |
-| `Exercise/Test_09_CountdownLatch.cpp` | ⏳ | spin-Wait + acq/rel 配对,N release ↔ 1 acquire |
-| `Exercise/Test_10_OneShotFlag.cpp` | ⏳ | publish-subscribe 广播版,1 release ↔ N acquire |
+| `Consumption/Exercise/Test_01_Counter.cpp` | ✅ | 基础 fetch_X 计数器 |
+| `Consumption/Exercise/Test_02_AtomicMax.cpp` | ✅ | CAS 循环,原子 max |
+| `Consumption/Exercise/Test_03_PublishSubscribe.cpp` | ✅ | memory_order release/acquire 配对 |
+| `Consumption/Exercise/Test_04_SpinLock.cpp` | ✅ | 从 0 实现完整 spinlock(踩过 bug 后修对) |
+| `Consumption/Exercise/Test_05_AtomicMin.cpp` | ✅ | Test_02 镜像,改对后形式美观 |
+| `Consumption/Exercise/Test_06_BoundedCounter.cpp` | ✅ | 条件 CAS(满了不写),识别出与 05 同模板 |
+| `Consumption/Exercise/Test_07_SlotClaimer.cpp` | ✅ | CAS 占槽 + 普通写,实现正确 |
+| `Consumption/Exercise/Test_08_PermitPool.cpp` | ✅ | TryDo/Do + 使用方完整。修过 Capacity vs OldCapacity 笔误。sleep 保留 200ms 当压力测试 |
+| `Consumption/Exercise/Test_09_CountdownLatch.cpp` | ✅ | spin-Wait + acq/rel 配对,N release ↔ 1 acquire。Wait 在 join 前,看出"同步点"≠"线程生命周期" |
+| `Consumption/Exercise/Test_10_OneShotFlag.cpp` | ⏳ | publish-subscribe 广播版,1 release ↔ N acquire |
 
 **附加实测**(没落 .cpp,但跑过):
 
@@ -100,9 +113,6 @@
 
 | 路径 | 主题 | 优先级 |
 |------|------|--------|
-| `Waiting/BossDeath.cpp` | `notify_all` 广播,多 attacker 等 boss 死 | 高 |
-| `Waiting/LostWakeup.cpp` | 为何 `wait` 必须带 predicate,假醒/丢通知实演 | 高 |
-| `Waiting/Timeout.cpp` | `wait_for` / `wait_until`,等不到就放弃 | 高 |
 | `Pipeline/*` | 多段 SPSC 队列串接,帧管线 | 中 |
 | `WorkerPool/*` | 固定线程数 + 任务队列 | 中 |
 | `JobSystem/*` | 依赖图 + work-stealing | 低 |
@@ -130,9 +140,8 @@
 按推荐顺序:
 
 1. **做 Test_09 + Test_10**(复习 spin-Wait + release/acquire 配对,无 CAS 干扰)
-2. **补完 Waiting/ 剩余三个样本**:`BossDeath.cpp` / `LostWakeup.cpp` / `Timeout.cpp`,把 CV 这一块从 🟡 推到 ✅
-3. **memory_order acq_rel 实战**:写一个 mini ref count(类似 shared_ptr 内部的 ControlBlock),把 acq_rel 从 60% 推到 80%
-4. **挑一个高阶模式起子主题**:Pipeline 或 WorkerPool 二选一
+2. **memory_order acq_rel 实战**:写一个 mini ref count(类似 shared_ptr 内部的 ControlBlock),把 acq_rel 从 60% 推到 80%
+3. **挑一个高阶模式起子主题**:Pipeline 或 WorkerPool 二选一
 
 ## 基础设施摘要
 

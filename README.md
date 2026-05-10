@@ -13,10 +13,10 @@ src/
 │   └── TOptionalOverride       # 可选覆盖值,消除哨兵值约定
 │
 └── Topic/                      # 主题演示
-    ├── Concurrency/            # 并发原语:mutex, condition_variable, atomic
     ├── LinkedList/             # 链表算法合集
     └── Multithreading/         # 多线程话题学习,按场景 sampling
         ├── Consumption/        # 消耗:HP 扣减、击杀归属、不变式保护
+        │   └── Exercise/       # atomic / CAS / spin 练习题 + 参考样本
         └── Waiting/            # 等待:condition_variable,线程间协作通知
 ```
 
@@ -37,7 +37,7 @@ src/
 .\build.ps1 src\Type\TSharedState.cpp
 .\build.ps1 src\Type\TOptionalOverride.cpp
 .\build.ps1 src\Topic\LinkedList\LinkedList.cpp
-.\build.ps1 src\Topic\Concurrency\Concurrency.cpp
+.\build.ps1 src\Topic\Multithreading\Waiting\BoundedQueue.cpp
 .\build.ps1 src\Topic\Multithreading\Consumption\Race.cpp
 ```
 
@@ -56,6 +56,7 @@ src/
 | `Type/` | `T<TypeName>.cpp`(同名 `.h` 是类型定义,`.cpp` 含演示 main) | `TSharedState.cpp` + `TSharedState.h` |
 | `Topic/<Subject>/` | 与目录同名的 `.cpp` | `LinkedList/LinkedList.cpp` |
 | `Topic/Multithreading/<Theme>/` | 平铺多个独立 `.cpp` | `Consumption/Race.cpp`、`Atomic.cpp` 等 |
+| `Topic/Multithreading/<Theme>/Exercise/` | `Test_NN_<Name>.cpp` 自学练习 + `Example_<Name>.cpp` 参考样本 | `Test_01_Counter.cpp`、`Example_AtomicOps.cpp` |
 
 ### 前置要求
 

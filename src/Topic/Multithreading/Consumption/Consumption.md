@@ -12,3 +12,12 @@
 | 4 | [OverKill.cpp](OverKill.cpp) | `std::mutex` + 不变式 | `bAlive == (HP > 0)`,`OnDeath` 仅触发一次 |
 
 主线:从无同步 → 单变量原子 → 多步原子 (CAS) → 多变量不变式 (mutex)。
+
+## Exercise
+
+[Exercise/](Exercise/) 子目录:atomic / CAS / spin 练习题 + 参考样本。形状/样式索引看顶层 [../样式表.md](../样式表.md)。
+
+| 类型 | 命名 | 内容 |
+|------|------|------|
+| 参考样本 | `Example_<Name>.cpp` | 我写的、可直接看的小型示例(目前只有 `Example_AtomicOps.cpp`) |
+| 自学练习 | `Test_NN_<Name>.cpp` | 题面 + 占位 TODO,自己实装,文件末尾有自检参考 |

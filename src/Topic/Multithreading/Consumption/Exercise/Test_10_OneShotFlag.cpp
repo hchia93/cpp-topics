@@ -47,18 +47,20 @@ class TOneShotFlag
 public:
     void Set()
     {
-        // TODO:store(true, release)
+        bRaised.store(true, std::memory_order_release);
     }
 
     bool TryWait() const
     {
-        // TODO:load(acquire)
-        return false;
+        return bRaised.load(std::memory_order_acquire) == true;
     }
 
     void Wait() const
     {
-        // TODO:while (!TryWait()) yield()
+        while(!TryWait())
+        {
+            std::this_thread::yield();
+        }
     }
 
 private:
@@ -98,18 +100,15 @@ int main()
     {
         Threads.emplace_back([&, i]
         {
-            // TODO:写 consumer 的行为:
-            //   1. Flag.Wait()
-            //   2. Observed[i] = Payload
+            Flag.Wait();
+            Observed[i] = Payload;
         });
     }
 
-    // 让 consumer 真的进入 spin,而不是 Set 之后才起来
+    // Producer 的行为： 拖 -> 设置 -> 公布
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
-    // TODO:producer 行为(注意顺序!)
-    //   1. Payload = 42
-    //   2. Flag.Set()
+    Payload = 42;
+    Flag.Set();
 
     for (auto& T : Threads) T.join();
 
