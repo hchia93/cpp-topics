@@ -66,7 +66,7 @@ Topic/Multithreading/
 ├── Consumption/            # ✅ 抢资源:atomic、CAS、mutex
 │   └── Exercise/           # ✅ atomic / CAS / spin 练习 + 参考样本
 ├── Waiting/                # 🟡 condition_variable:等通知、广播、bounded queue
-├── Pipeline/               # 帧管线:多段队列串接
+├── Pipeline/               # 🟡 帧管线:多段队列串接,关闭协议 + join 拓扑序
 ├── WorkerPool/             # 线程池:任务派发、生命周期
 ├── JobSystem/              # 依赖图 + work-stealing
 ├── DoubleBuffer/           # 渲染/逻辑双缓冲

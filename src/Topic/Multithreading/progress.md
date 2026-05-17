@@ -9,7 +9,7 @@
 | 维度 | 估算 | 一句话定性 |
 |------|------|-----------|
 | 概念覆盖 | ~63% | 单变量同步 + CV + memory_order 配对(含 acq_rel R/M/W 拆解) + CAS 几种变种已通,异步契约层与高阶模式未碰 |
-| 代码样本 | ~50% | Consumption 完整,Waiting 五件齐,LastHit.cpp 已读 + 重构,Exercise 进到 09 ✅,10 待做 |
+| 代码样本 | ~53% | Consumption 完整,Waiting 五件齐,LastHit.cpp 已读 + 重构,Exercise 进到 09 ✅,10 待做,Pipeline 起步 |
 | 综合 | ~52% | acquire/release 推到 75%,acq_rel 推到 60%,CAS 失败侧 acquire 语义内化 |
 
 ## 仓库重整(2026-05-11)
@@ -48,7 +48,7 @@ Concurrency 子目录是 Multithreading 的一部分,已合并。Exercise 归属
 | 关键字辨析:const_cast | 通常是签名设计错,Scott Meyers pattern 是正当用法 | ✅ | 75% |
 | 异步契约层(future / promise / async) | 比喻精准,代码层 0 实战 | 🟡 | 55% |
 | coroutine | 位置定位清楚,没碰 `co_await` | ⏳ | 35% |
-| 多线程模式速查 | `Multithreading.md` 十种模式 + 选型经验,大部分子主题样本未动 | 🟡 | 25% |
+| 多线程模式速查 | `Multithreading.md` 十种模式 + 选型经验,Pipeline 首样本已实装(Producer/Worker/Sink + 关闭协议 + join 拓扑序),其余子主题样本未动 | 🟡 | 35% |
 | 工程基础设施 | `build.ps1` + Topic/Type 目录约定 | ✅ | 90% |
 | shared_mutex / 读写锁 | 未碰 | ⏳ | 5% |
 | semaphore / latch / barrier | 未碰 | ⏳ | 5% |
@@ -83,6 +83,7 @@ Concurrency 子目录是 Multithreading 的一部分,已合并。Exercise 归属
 | `Waiting/LostWakeup.cpp` | wait 必须带 predicate | notifier 抢跑实演 lost wakeup,Pred 版自救 |
 | `Waiting/Timeout.cpp` | `wait_for` 限时等 | 500ms 上限,超时放弃,网络请求标配 |
 | `Waiting/BoundedQueue.cpp` | producer-consumer 综合 | 双 CV(NotEmpty/NotFull)+ 优雅 stop |
+| `Pipeline/Pipeline.cpp` | 三段流水线 + 关闭协议 | Producer→Worker→Sink,join 拓扑序,首个 3+ 角色协调样本 |
 | `Consumption/Exercise/Example_AtomicOps.cpp` | atomic 家族速查 | 6 个 demo 涵盖 load/store/exchange/fetch_X/CAS/release-acquire |
 
 **练习题**(你自己写的实现):
@@ -113,7 +114,7 @@ Concurrency 子目录是 Multithreading 的一部分,已合并。Exercise 归属
 
 | 路径 | 主题 | 优先级 |
 |------|------|--------|
-| `Pipeline/*` | 多段 SPSC 队列串接,帧管线 | 中 |
+| `Pipeline/*` | 多段 SPSC 队列串接,帧管线(首样本已落 Pipeline.cpp) | 中 |
 | `WorkerPool/*` | 固定线程数 + 任务队列 | 中 |
 | `JobSystem/*` | 依赖图 + work-stealing | 低 |
 | `DoubleBuffer/*` | `atomic<T*>` swap,渲染读上一帧 | 低 |
@@ -142,6 +143,7 @@ Concurrency 子目录是 Multithreading 的一部分,已合并。Exercise 归属
 1. **做 Test_09 + Test_10**(复习 spin-Wait + release/acquire 配对,无 CAS 干扰)
 2. **memory_order acq_rel 实战**:写一个 mini ref count(类似 shared_ptr 内部的 ControlBlock),把 acq_rel 从 60% 推到 80%
 3. **挑一个高阶模式起子主题**:Pipeline 或 WorkerPool 二选一
+4. **起 `WorkerPool/` 或写 `std::jthread`+`stop_token` 协作取消样本**(把手排 join 序消掉)
 
 ## 基础设施摘要
 

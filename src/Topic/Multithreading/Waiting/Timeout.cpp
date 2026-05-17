@@ -50,9 +50,7 @@ int main()
         std::unique_lock<std::mutex> Lock(Mutex);
         std::cout << "[Client] 等响应,上限 500ms\n";
 
-        bool bGot = CV.wait_for(Lock,
-                                std::chrono::milliseconds(500),
-                                [&] { return bResponseReady; });
+        bool bGot = CV.wait_for(Lock, std::chrono::milliseconds(500), [&] { return bResponseReady; });
 
         if (bGot)
         {
